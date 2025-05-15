@@ -8,7 +8,7 @@ const authenticatedFetch = async (url, options = {}, apiKey) => {
     'Content-Type': 'application/json',
   };
   if (apiKey) {
-    headers['api_key'] = apiKey;
+    headers['Api-Key'] = apiKey;
   }
 
   try {
@@ -31,10 +31,10 @@ const authenticatedFetch = async (url, options = {}, apiKey) => {
 function Site() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('splash'); // splash, login, signup, profile, room
-  const [currentUser, setCurrentUser] = useState(null); // { name, id, apiKey }
-  const [rooms, setRooms] = useState({}); // { roomId1: {id, name, messages: []}, ... }
-  const [currentRoomId, setCurrentRoomId] = useState(null); // ID of the currently selected room
+  const [currentPage, setCurrentPage] = useState('splash'); 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [rooms, setRooms] = useState({});
+  const [currentRoomId, setCurrentRoomId] = useState(null);
 
   useEffect(() => {
     setIsLoading(false);
@@ -152,7 +152,7 @@ function Site() {
     if (!currentUser || !currentUser.apiKey) return;
     setIsLoading(true);
     try {
-      const data = await authenticatedFetch('/api/update_username', {
+      const data = await authenticatedFetch('/api/user/name', {
         method: 'POST',
         body: JSON.stringify({ new_name: newName }),
       }, currentUser.apiKey);
@@ -178,7 +178,7 @@ function Site() {
     }
     setIsLoading(true);
     try {
-      const data = await authenticatedFetch('/api/update_password', {
+      const data = await authenticatedFetch('/api/user/password', {
         method: 'POST',
         body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword }),
       }, currentUser.apiKey);
@@ -195,7 +195,7 @@ function Site() {
     if (!currentUser || !currentUser.apiKey) return;
     setIsLoading(true);
     try {
-      const newRoomData = await authenticatedFetch('/api/create_room', {
+      const newRoomData = await authenticatedFetch('/api/rooms', {
         method: 'POST',
         body: JSON.stringify({ room_name: roomName }),
       }, currentUser.apiKey);
@@ -219,7 +219,7 @@ function Site() {
       return;
     }
     try {
-      await authenticatedFetch(`/api/rooms/${roomId}/messages/post`, {
+      await authenticatedFetch(`/api/rooms/${roomId}/messages`, {
         method: 'POST',
         body: JSON.stringify({ userid: currentUser.id, body: messageText }),
       }, currentUser.apiKey);
@@ -540,14 +540,21 @@ function RoomPage() {
   return (
     <div>
       <h2>Rooms</h2>
-      <form onSubmit={handleRoomCreationSubmit} style={{marginBottom: '20px'}}>
+      <form onSubmit={handleRoomCreationSubmit} style={{marginBottom: '20px', display: 'flex', gap: '10px' }}> {}
         <input
           type="text"
           value={newRoomName}
           onChange={(e) => setNewRoomName(e.target.value)}
           placeholder="New room name"
+          style={{ flexGrow: 1, padding: '8px' }} 
         />
-        <button type="submit" disabled={isLoading}>{isLoading ? "Creating..." : "Create Room"}</button>
+        <button 
+          type="submit" 
+          disabled={isCreatingRoom || globalLoading} 
+          style={{ padding: '8px 15px' }} 
+        >
+          {isCreatingRoom ? "Creating..." : "Create Room"} {}
+        </button>
       </form>
 
       <div className="room-selector">
@@ -630,8 +637,8 @@ function ChatRoom({ roomId, roomName, messages }) {
   );
 }
 
-function ChatMessage({ message }) { // Rubric: Component for a single chat message, receives props
-  const { currentUser } = useContext(AppContext); // To highlight current user's messages
+function ChatMessage({ message }) { 
+  const { currentUser } = useContext(AppContext); 
   const isCurrentUserMessage = currentUser && message.user === currentUser.name;
 
   return (
@@ -641,7 +648,7 @@ function ChatMessage({ message }) { // Rubric: Component for a single chat messa
         padding: '5px',
         margin: '5px 0',
         borderRadius: '5px',
-        backgroundColor: isCurrentUserMessage ? '#d1e7dd' : '#f8f9fa', // Example styling
+        backgroundColor: isCurrentUserMessage ? '#d1e7dd' : '#f8f9fa', 
         textAlign: isCurrentUserMessage ? 'right' : 'left',
       }}
     >
@@ -650,7 +657,6 @@ function ChatMessage({ message }) { // Rubric: Component for a single chat messa
   );
 }
 
-// --- Render the main App component ---
 const rootContainer = document.getElementById("root");
 if (rootContainer) {
   const root = ReactDOM.createRoot(rootContainer);

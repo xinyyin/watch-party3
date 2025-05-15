@@ -17,7 +17,7 @@ def get_db():
         db.row_factory = sqlite3.Row
     return db
 
-@app.teardown_app
+@app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
@@ -71,7 +71,9 @@ def new_user():
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        print("FLASK_DEBUG: Request Headers received by Flask:", request.headers) # <--- 关键日志
         api_key = request.headers.get('Api-Key')
+        print(f"FLASK_DEBUG: Extracted Api-Key header by Flask: {api_key}") # <--- 关键日志
         if api_key:
             user = query_db('SELECT * FROM users WHERE api_key = ?', (api_key,), one=True)
             if user:
@@ -321,3 +323,20 @@ def api_post_room_message(room_id):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3500, debug=True)
+
+
+
+'''
+app.py:
+
+/api/signup (POST) - api_signup
+/api/login (POST) - api_login
+/api/user/profile (GET) - api_get_user_profile 
+/api/user/name (POST) - api_update_username
+/api/user/password (POST) - api_update_password
+/api/rooms (GET) - api_get_rooms
+/api/rooms (POST) - api_create_room
+/api/rooms/<int:room_id>/name (POST) - api_update_room_name
+/api/rooms/<int:room_id>/messages (GET) - api_get_room_messages
+/api/rooms/<int:room_id>/messages (POST) - api_post_room_message 
+'''
